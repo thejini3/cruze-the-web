@@ -49,13 +49,15 @@ echo "Aquatone Scan Completed----------------------------------------"
 
 # echo "httprobe wil check for live_subdomains"
 cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
+cat $dir/live_subdomains.txt | sort -u | tee $dir/live_subdomains.txt
 
 #Nmap scripts
 echo "Now Nmap will ping for IP addresses............................"
 nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
 
 cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
-cat $dir/live_ip.txt | wc -l
+cat $dir/live_ip.txt | sort - u | tee live_ip.txt | wc -l
+
 rm $dir/nmap_live_ip.txt
 echo "Results of Nmap Host Status------------------------------------"
 
@@ -91,13 +93,13 @@ echo  "---------------------------------------------------------------"
 
 echo "Now don't forget to use the below commands. "
 
-echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200\n" >> $dir/next_commands.txt
+echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200" >> $dir/next_commands.txt
 
-echo  "sudo nmap -iL $dir/live_ip.txt -A -O | tee $dir/nmap_scan.txt\n" >> $dir/next_commands.txt
+echo "sudo nmap -iL $dir/live_ip.txt -A -O | tee $dir/nmap_scan.txt" >> $dir/next_commands.txt
 
-echo "sudo masscan -iL $dir/live_ip.txt --top-ports -oX $dir/masscan_output.xml --max-rate 100000\n" >> $dir/next_commands.txt
+echo "sudo masscan -iL $dir/live_ip.txt --top-ports -oX $dir/masscan_output.xml --max-rate 100000" >> $dir/next_commands.txt
 
-echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt\n" >> $dir/next_commands.txt
+echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt" >> $dir/next_commands.txt
 
 cat $dir/next_commands.txt
 
