@@ -88,13 +88,17 @@ python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json
 
 
 echo  "---------------------------------------------------------------"
+
 echo "Now don't forget to use the below commands. "
-echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
 
-echo  "sudo nmap -iL $dir/live_ip.txt -A -O | tee $dir/nmap_scan.txt"
+echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200\n" >> $dir/next_commands.txt
 
-echo "sudo masscan -iL $dir/live_ip.txt --top-ports -oX $dir/masscan_output.xml --max-rate 100000"
+echo  "sudo nmap -iL $dir/live_ip.txt -A -O | tee $dir/nmap_scan.txt\n" >> $dir/next_commands.txt
 
-echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt"
+echo "sudo masscan -iL $dir/live_ip.txt --top-ports -oX $dir/masscan_output.xml --max-rate 100000\n" >> $dir/next_commands.txt
 
+echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt\n" >> $dir/next_commands.txt
 
+cat $dir/next_commands.txt
+
+echo  "---------------------------------------------------------------"
