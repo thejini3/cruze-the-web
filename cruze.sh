@@ -119,15 +119,19 @@ corsDetect(){
 
 
 endSh(){
+  mkdir -p $dir/fuzzed
+
   echo  "------------------Now don't forget to use the below commands.--------------------------"
 
-  echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
+  echo "ffuf -c -w ~/tools/dirsearch/db/dicc.txt -of html -o fuzzed/dicc.root.html -u $domain/FUZZ" >> $dir/next_commands.txt
 
-  echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt"
+  echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt" >> $dir/next_commands.txt
 
-  echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oJ $dir/masscan_output.json"
+  echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oJ $dir/masscan_output.json" >> $dir/next_commands.txt
 
-  echo "python3 ~/tools/dirsearch/dirsearch.py -L $dir/subdomains.txt -e php,asp,aspx,jsp,html,zip  --plain-text-report=dir_results.txt"
+  echo "python3 ~/tools/dirsearch/dirsearch.py -L $dir/subdomains.txt -e php,asp,aspx,jsp,html,zip  --plain-text-report=dir_results.txt" >> $dir/next_commands.txt
+
+  cat $dir/next_commands.txt
 
 }
 
@@ -141,7 +145,7 @@ subLister
 subFinder
 rapiddns
 groupSubdomains
-aquaTone
+# aquaTone
 liveSubdomains
 
 # port Scan
