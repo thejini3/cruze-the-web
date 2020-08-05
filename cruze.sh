@@ -117,7 +117,7 @@ corsDetect(){
 }
 
 
-end(){
+endSh(){
   echo  "------------------Now don't forget to use the below commands.--------------------------"
 
   echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
@@ -159,4 +159,4 @@ wafDetect
 corsDetect
 
 # footer
-end
+endSh
