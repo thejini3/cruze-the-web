@@ -27,7 +27,7 @@ logo
 mkdir -p $dir
 
 ###############################
-./subdomains.sh $domain $dir
+~/tools/cruze-the-web/subdomains.sh $domain $dir
 ###############################
 
 echo "Now aquatone will start to screenshot and some extra recons."
