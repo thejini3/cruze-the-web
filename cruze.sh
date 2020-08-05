@@ -75,6 +75,7 @@ nmapScan(){
   nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
   cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
   rm $dir/nmap_live_ip.txt
+  cat $dir/live_ip.txt | sort -u | tee $dir/live_ip.txt
 }
 
 pathFinders(){
