@@ -1,17 +1,7 @@
 #!/bin/bash
-domain=$1
-dir=$2
 
-if [ -z "$1" ]; then
-  echo "Domain requried! Ex: ./cruze.sh example.com"
-  exit 1
-fi
-
-if [ -z "$2" ]; then
-  dir=$(date '+%Y-%m-%d')
-else
-  dir=$(echo "$dir" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/-/g | sed -r s/^-+\|-+$//g | tr A-Z a-z)
-fi
+domain=""
+dir=""
 
 logo(){
 echo $'\e[1;31m'"
@@ -22,68 +12,150 @@ echo $'\e[1;31m'"
  \____|_| \_\\\___//____|_____|
                               The Web " $'\e[0m'
 }
+
+initDefaults(){
+  domain=$1
+  if [ -z "$1" ]; then
+    echo -e "\e[91mNo argument supplied\e[0m"
+    echo -e "\e[91mDomain Name requried! \e[0m Ex: ./cruze.sh example.com"
+    exit 1
+  fi
+  echo -e "\e[96mThe Target is \e[0m \e[96m$1\e[0m"
+  dir=$(date '+%Y-%m-%d')
+  dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/-/g | tr A-Z a-z)
+  mkdir -p $dir
+}
+
+assetFinder(){
+  # assetfinder
+  echo -e "\e[91m-------------------Assetfinder Started  -------------------------------------------\e[0m"
+  assetfinder --subs-only $domain | tee $dir/asset_subs.txt
+}
+
+subLister(){
+  # sublister
+  echo -e "\e[91m-------------------Sublister Started  ----------------------------------------------\e[0m"
+  python3 ~/tools/Sublist3r/sublist3r.py -t 10 -d $domain -o $dir/subs.txt
+}
+
+subFinder(){
+  # subfinder
+  echo -e "\e[91m-------------------Subfinder---------------------------------------------------------\e[0m"
+  subfinder -d $domain --silent -o $dir/subfinder.txt
+}
+
+rapiddns(){
+  echo -e "\e[91m-------------------Rapiddns-----------------------------------------------------------\e[0m"
+  curl -s "https://rapiddns.io/subdomain/$domain?full=1"| grep -oP '_blank">\K[^<]*' | grep -v http | sort -u | tee $dir/rapiddns.txt
+}
+
+groupSubdomains(){
+  cat $dir/asset_subs.txt $dir/subs.txt $dir/subfinder.txt $dir/rapiddns.txt | sort -u > $dir/subdomains.txt
+  rm $dir/asset_subs.txt
+  rm $dir/subs.txt
+  rm $dir/subfinder.txt
+  rm $dir/rapiddns.txt
+}
+
+aquaTone(){
+  # aquatone
+  echo -e "\e[91mNow aquatone will start to screenshot and some extra recons."
+  cat $dir/subdomains.txt | aquatone -chrome-path /snap/bin/chromium -ports xlarge -out $dir/
+  echo -e "\e[91m-------------------Aquatone Scan Completed------------------------------------------\e[0m"
+}
+
+liveSubdomains(){
+  # echo "httprobe will check for live_subdomains"
+  cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
+}
+
+nmapScan(){
+  # nmap scripts
+  echo -e "\e[91m-------------------Now Nmap will ping for IP addresses-------------------------------\e[0m"
+  nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
+  cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
+  rm $dir/nmap_live_ip.txt
+}
+
+pathFinders(){
+  echo -e "\e[91m-------------------gau Scan Started--------------------------------------------------\e[0m"
+  gau --subs $domain | tee $dir/gau_urls.txt
+
+  echo -e "\e[91m-------------------hakrawler Started-------------------------------------------------\e[0m"
+  cat $dir/subdomains.txt | hakrawler -depth 3 -plain | tee $dir/hakrawler.txt
+
+  echo -e "\e[91m-------------------waybackurls Scan Started------------------------------------------\e[0m"
+  cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
+  cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
+}
+
+scanSuspect(){
+  echo -e "\e[91m-------------------looking for vulnerable endpoints----------------------------------\e[0m"
+  mkdir $dir/paramlist
+  cat $dir/waybackurls.txt | gf redirect > $dir/paramlist/redirect.txt
+  cat $dir/waybackurls.txt | gf ssrf > $dir/paramlist/ssrf.txt
+  cat $dir/waybackurls.txt | gf rce > $dir/paramlist/rce.txt
+  cat $dir/waybackurls.txt | gf idor > $dir/paramlist/idor.txt
+  cat $dir/waybackurls.txt | gf sqli > $dir/paramlist/sqli.txt
+  cat $dir/waybackurls.txt | gf lfi > $dir/paramlist/lfi.txt
+  cat $dir/waybackurls.txt | gf ssti > $dir/paramlist/ssti.txt
+  cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt
+  cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
+  cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
+  echo -e "\e[91m-------------------Gf patters Scan Completed------------------------------------------------\e[0m"
+}
+
+wafDetect(){
+  #wafw00f
+  wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
+}
+
+corsDetect(){
+  #corsy
+  python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json
+}
+
+
+end(){
+  echo  "------------------Now don't forget to use the below commands.--------------------------"
+
+  echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
+
+  echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt"
+
+  echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oJ $dir/masscan_output.json"
+
+  echo "python3 ~/tools/dirsearch/dirsearch.py -L $dir/subdomains.txt -e php,asp,aspx,jsp,html,zip  --plain-text-report=dir_results.txt"
+
+}
+
+# pre
 logo
+initDefaults "$1"
 
-mkdir -p $dir
+# subdomain hunt 
+assetFinder
+subLister
+subFinder
+rapiddns
+groupSubdomains
+aquaTone
+liveSubdomains
 
-###############################
-~/tools/cruze-the-web/subdomains.sh $domain $dir
-###############################
+# port Scan
+nmapScan
 
-echo "Now aquatone will start to screenshot and some extra recons."
-cat $dir/subdomains.txt | aquatone -chrome-path /snap/bin/chromium -ports xlarge -out $dir/
-echo "Aquatone Scan Completed----------------------------------------"
+# path trace
+pathFinders
 
-#Nmap scripts
-echo "Now Nmap will ping for IP addresses............................"
-nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
+# scan for suspected urls
+scanSuspect
 
-cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
-cat $dir/live_ip.txt | sort -u | tee $dir/live_ip.txt
+# waf
+wafDetect
 
-rm $dir/nmap_live_ip.txt
-echo "Results of Nmap Host Status------------------------------------"
+# CORS
+corsDetect
 
-echo "gau Scan Started..."
-gau --subs $domain | tee $dir/gau_urls.txt
-
-echo "waybackurls Scan Started"
-cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
-
-cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt | sort -u > $dir/waybackurls.txt
-echo "totoal waybackurls counts"
-cat $dir/waybackurls.txt | wc -l
-
-echo  "looking for vulnerable endpoints.............................."
-mkdir $dir/paramlist
-cat $dir/waybackurls.txt | gf redirect > $dir/paramlist/redirect.txt 
-cat $dir/waybackurls.txt | gf ssrf > $dir/paramlist/ssrf.txt 
-cat $dir/waybackurls.txt | gf rce > $dir/paramlist/rce.txt 
-cat $dir/waybackurls.txt | gf idor > $dir/paramlist/idor.txt 
-cat $dir/waybackurls.txt | gf sqli > $dir/paramlist/sqli.txt 
-cat $dir/waybackurls.txt | gf lfi > $dir/paramlist/lfi.txt
-cat $dir/waybackurls.txt | gf ssti > $dir/paramlist/ssti.txt 
-cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt 
-cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
-echo "Gf patters Completed"
-
-wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
-
-python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json
-
-
-echo  "---------------------------------------------------------------"
-
-echo "Now don't forget to use the below commands. "
-
-echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200" >> $dir/next_commands.txt
-
-echo "sudo nmap -iL $dir/live_ip.txt -A -O | tee $dir/nmap_scan.txt" >> $dir/next_commands.txt
-
-echo "sudo masscan -iL $dir/live_ip.txt --top-ports -oX $dir/masscan_output.xml --max-rate 100000" >> $dir/next_commands.txt
-
-echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt" >> $dir/next_commands.txt
-
-cat $dir/next_commands.txt
-
-echo  "---------------------------------------------------------------"
+# footer
+end
