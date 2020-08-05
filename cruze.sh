@@ -26,30 +26,13 @@ logo
 
 mkdir -p $dir
 
-echo "-------------------Assetfinder Started  -------------------------------------------"
-assetfinder --subs-only $domain | tee $dir/asset_subs.txt
-#Sublister
-echo "-------------------Sublister Started  -------------------------------------------"
-python3 ~/tools/Sublist3r/sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
-# cat $dir/subs.txt | wc -l
-echo "Sublister Scan Completed-----------------------------------------"
-
-cat $dir/asset_subs.txt $dir/subs.txt | sort -u > $dir/subdomains.txt
-rm $dir/asset_subs.txt
-rm $dir/subs.txt
-
+###############################
+./subdomains.sh $domain $dir
+###############################
 
 echo "Now aquatone will start to screenshot and some extra recons."
 cat $dir/subdomains.txt | aquatone -chrome-path /snap/bin/chromium -ports xlarge -out $dir/
-
-echo "Total number of subdomains"
-cat  $dir/subdomains.txt | wc -l
 echo "Aquatone Scan Completed----------------------------------------"
-
-
-# echo "httprobe wil check for live_subdomains"
-cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
-cat $dir/live_subdomains.txt | sort -u | tee $dir/live_subdomains.txt
 
 #Nmap scripts
 echo "Now Nmap will ping for IP addresses............................"
