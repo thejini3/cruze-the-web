@@ -1,11 +1,15 @@
 #!/bin/bash
 
 sudo apt install -y python2
+sudo apt install -y phantomjs
+sudo apt install -y imagemagick
+sudo apt install -y xvfb
 sudo apt install -y python3-dnspython
 
 cd ~/Downloads && curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
-pip install -U contextlib2 PySocks pluginbase pathlib2 singledispatch zipp wafw00f tld requests
+
+pip3 install -U webscreenshot contextlib2 PySocks pluginbase pathlib2 singledispatch zipp wafw00f tld requests
 
 
 # # Go should be installed

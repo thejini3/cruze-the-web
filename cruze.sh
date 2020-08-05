@@ -67,6 +67,7 @@ aquaTone(){
 liveSubdomains(){
   # echo "httprobe will check for live_subdomains"
   cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
+  webscreenshot -v -i $dir/live_subdomains.txt -o $dir/screenshot
 }
 
 nmapScan(){
