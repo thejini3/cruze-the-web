@@ -123,7 +123,7 @@ endSh(){
 
   echo  "------------------Now don't forget to use the below commands.--------------------------"
 
-  echo "ffuf -c -w ~/tools/dirsearch/db/dicc.txt -of html -o fuzzed/dicc.root.html -u $domain/FUZZ" >> $dir/next_commands.txt
+  echo "ffuf -c -w \$dicc -of html -o fuzzed/dicc.root.html -u $domain/FUZZ" >> $dir/next_commands.txt
 
   echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt" >> $dir/next_commands.txt
 
