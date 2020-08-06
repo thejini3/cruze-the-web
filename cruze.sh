@@ -67,7 +67,7 @@ aquaTone(){
 liveSubdomains(){
   # echo "httprobe will check for live_subdomains"
   cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
-  ~/tools/webscreenshot/webscreenshot.py -v -i $dir/live_subdomains.txt -o $dir/screenshot
+  webscreenshot.py -v -i $dir/live_subdomains.txt -o $dir/screenshot
 }
 
 nmapScan(){
@@ -135,6 +135,8 @@ endSh(){
 
 }
 
+mkdir -p $dir/fuzzed
+mkdir -p $dir/screenshot
 mkdir -p $dir/exposed
 
 # pre
