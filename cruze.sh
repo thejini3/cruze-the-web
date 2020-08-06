@@ -135,6 +135,8 @@ endSh(){
 
 }
 
+mkdir -p $dir/exposed
+
 # pre
 logo
 initDefaults "$1"
