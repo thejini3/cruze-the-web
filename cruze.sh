@@ -135,13 +135,15 @@ endSh(){
 
 }
 
-mkdir -p $dir/fuzzed
-mkdir -p $dir/screenshot
-mkdir -p $dir/exposed
 
 # pre
 logo
 initDefaults "$1"
+
+
+mkdir -p $dir/fuzzed
+mkdir -p $dir/screenshot
+mkdir -p $dir/exposed
 
 # subdomain hunt 
 assetFinder

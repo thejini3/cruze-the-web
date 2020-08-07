@@ -346,6 +346,7 @@ _www
 .env.test.local
 .env.test.sample
 .env.travis
+.env
 .env~
 .environment
 .envrc
@@ -1064,10 +1065,15 @@ _www
 /var/lib/cloud/instance/vendor-data.txt
 /var/lib/cloud/instance/vendor-data.txt.i
 /wp-content/debug.log
+wp-content/debug.log
+wp-content/dump.sql
 /wp-content/dump.sql
 /wp-content/.git
+wp-content/.git
 /wp-content/.git/HEAD
+wp-content/.git/HEAD
 /wp-content/uploads/dump.sql
+wp-content/uploads/dump.sql
 %2e%2e//google.com
 %3f/
 %20../
